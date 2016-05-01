@@ -1,0 +1,7 @@
+{
+    "require": {
+        "nikic/php-parser": "dev-master",
+        "symfony/console": "^3.0",
+        "sebastian/diff": "^1.4"
+    }
+}
