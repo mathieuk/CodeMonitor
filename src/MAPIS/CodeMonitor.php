@@ -120,6 +120,11 @@ class CodeMonitor
 		return $findings;
 	}
 
+	public function searchFilesForDocblockTag($files, $docblockTag)
+	{
+		
+	}
+		
 	public function searchFilesForWatchedFunctions($files, $watchedIdentifiers)
 	{
 		$parserFactory = new ParserFactory();

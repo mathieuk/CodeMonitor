@@ -16,6 +16,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 	protected $file;
 
 	protected $methods;
+	protected $docblockTags = [];
 	protected $foundMethods = [];
 	/**
 	 * @var Standard
@@ -25,7 +26,18 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 	public function __construct(ICodeHasher $hasher, $watchedFunctions, $file)
 	{
 		$this->codeHasher    = $hasher;
-		$this->methods       = $watchedFunctions;
+		
+		// Filter out any doctags
+		$this->methods       = array_filter(
+			$watchedFunctions,
+			function($element) { return $element[0] != '@'; }
+		);
+		
+		$this->doctags = array_filter(
+			$watchedFunctions, 
+			function($element) { return $element[0] == '@'; }
+		);
+		
 		$this->file          = $file;
 	}
 
@@ -49,9 +61,43 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 		}
 	}
 
+	protected function interestedIn(Node $node)
+	{
+		if (
+			in_array($node->name, $this->methods) ||
+			in_array($node->namespacedName, $this->methods))
+		{
+			return TRUE;
+		}
+		
+		return $this->interestedInDocblock($node);
+	}
+	
+	protected function interestedInDocblock(Node $node)
+	{
+		$comments = $node->getAttribute('comments');
+		
+		if ($comments)
+		{
+			foreach($comments as $comment)
+			{
+				foreach ($this->doctags as $tag)
+				{
+					if (stripos($comment, $tag) !== FALSE)
+					{
+						return TRUE;
+					}
+				}
+			}
+		}
+
+		return FALSE;
+	}
+	
+
 	protected function parseFunction(Function_ $node)
 	{
-		if (in_array($node->namespacedName, $this->methods))
+		if ($this->interestedIn($node))
 		{
 			$codeSig = new StatementSignature();
 			$codeSig->setFqmn($node->namespacedName);
@@ -66,9 +112,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 	protected function parseClass(Node\Stmt\Class_ $node)
 	{
 		// Did we want to watch this entire class?
-		if (
-			in_array($node->namespacedName, $this->methods) ||
-			in_array($node->name, $this->methods))
+		if ($this->interestedIn($node))
 		{
 			$codeSig = new StatementSignature();
 			$codeSig->setFqmn($node->namespacedName);
@@ -77,19 +121,20 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 			$codeSig->setCode($this->codeHasher->codeFromClass($node));
 
 			$this->foundMethods[(string)$node->namespacedName] = $codeSig;
-
 		}
 		// Did we (also) want to watch a specific method?
 		foreach ($node->stmts as $stmt)
 		{
 			if ($stmt instanceof Node\Stmt\ClassMethod)
 			{
+
 				$namespacedMethodName = $node->namespacedName . '::' . $stmt->name;
 				$methodName = $node->name . '::' . $stmt->name;
 
 				if (
 					in_array($methodName, $this->methods) || 
-					in_array($namespacedMethodName, $this->methods))
+					in_array($namespacedMethodName, $this->methods) || 
+					$this->interestedInDocblock($stmt))
 				{
 					$codeSig = new StatementSignature();
 					$codeSig->setFqmn($namespacedMethodName);

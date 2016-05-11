@@ -54,7 +54,6 @@ class WatchCommand extends AbstractCommand
 		$codeMon    = $this->getCodeMonitor($config);
 		$repo       = $this->getRepository($config);
 
-
 		$results = $codeMon->searchFilesForWatchedFunctions(
 			$this->getWatchedFilesIterator($config),
 			[$identifier]
