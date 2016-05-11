@@ -84,17 +84,20 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 		{
 			if ($stmt instanceof Node\Stmt\ClassMethod)
 			{
-				$methodName = $node->namespacedName . '::' . $stmt->name;
+				$namespacedMethodName = $node->namespacedName . '::' . $stmt->name;
+				$methodName = $node->name . '::' . $stmt->name;
 
-				if (in_array($methodName, $this->methods))
+				if (
+					in_array($methodName, $this->methods) || 
+					in_array($namespacedMethodName, $this->methods))
 				{
 					$codeSig = new StatementSignature();
-					$codeSig->setFqmn($methodName);
+					$codeSig->setFqmn($namespacedMethodName);
 					$codeSig->setFile($this->file);
 					$codeSig->setHash($this->codeHasher->hashFromMethod($stmt));
 					$codeSig->setCode($this->codeHasher->codeFromMethod($stmt));
 
-					$this->foundMethods[$methodName] = $codeSig;
+					$this->foundMethods[$namespacedMethodName] = $codeSig;
 				}
 			}
 		}
