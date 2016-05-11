@@ -51,10 +51,10 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 
 	protected function parseFunction(Function_ $node)
 	{
-		if (in_array($node->name, $this->methods))
+		if (in_array($node->namespacedName, $this->methods))
 		{
 			$codeSig = new StatementSignature();
-			$codeSig->setFqmn($node->name);
+			$codeSig->setFqmn($node->namespacedName);
 			$codeSig->setFile($this->file);
 			$codeSig->setHash($this->codeHasher->hashFromFunction($node));
 			$codeSig->setCode($this->codeHasher->codeFromFunction($node));
@@ -66,15 +66,17 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 	protected function parseClass(Node\Stmt\Class_ $node)
 	{
 		// Did we want to watch this entire class?
-		if (in_array($node->name, $this->methods))
+		if (
+			in_array($node->namespacedName, $this->methods) ||
+			in_array($node->name, $this->methods))
 		{
 			$codeSig = new StatementSignature();
-			$codeSig->setFqmn($node->name);
+			$codeSig->setFqmn($node->namespacedName);
 			$codeSig->setFile($this->file);
 			$codeSig->setHash($this->codeHasher->hashFromClass($node));
 			$codeSig->setCode($this->codeHasher->codeFromClass($node));
 
-			$this->foundMethods[$node->name] = $codeSig;
+			$this->foundMethods[(string)$node->namespacedName] = $codeSig;
 
 		}
 		// Did we (also) want to watch a specific method?
@@ -82,7 +84,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 		{
 			if ($stmt instanceof Node\Stmt\ClassMethod)
 			{
-				$methodName = $node->name . '::' . $stmt->name;
+				$methodName = $node->namespacedName . '::' . $stmt->name;
 
 				if (in_array($methodName, $this->methods))
 				{

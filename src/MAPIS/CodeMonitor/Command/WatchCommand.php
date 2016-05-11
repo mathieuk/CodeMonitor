@@ -70,7 +70,7 @@ class WatchCommand extends AbstractCommand
 		 */
 		foreach ($results as $result)
 		{
-			$question      = new ConfirmationQuestion("Found $identifier in {$result->getFile()}. Watch this? [Y/n]: ");
+			$question      = new ConfirmationQuestion("Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Watch this? [Y/n]: ");
 
 			if ($this->questionHelper->ask($input, $output, $question))
 			{

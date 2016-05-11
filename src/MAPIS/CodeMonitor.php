@@ -10,6 +10,7 @@ use MAPIS\CodeMonitor\Repository\SignatureRepository;
 use MAPIS\CodeMonitor\Entity\StatementSignature;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
+use PhpParser\NodeVisitor\NameResolver;
 use SebastianBergmann\Diff\Differ;
 
 class CodeMonitor
@@ -133,6 +134,7 @@ class CodeMonitor
 			);
 
 			$nodeTraverser = new NodeTraverser();
+			$nodeTraverser->addVisitor(new NameResolver());
 			$nodeTraverser->addVisitor($visitor);
 
 			$parser = $parserFactory->create(ParserFactory::PREFER_PHP7);
