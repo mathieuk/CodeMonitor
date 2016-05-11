@@ -23,7 +23,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 	 */
 	protected $prettyPrinter;
 
-	public function __construct(ICodeHasher $hasher, $watchedFunctions, $file)
+	public function __construct(INodeTransformer $hasher, $watchedFunctions, $file)
 	{
 		$this->codeHasher    = $hasher;
 		

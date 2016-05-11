@@ -2,7 +2,7 @@
 
 namespace MAPIS;
 
-use MAPIS\CodeMonitor\CodeHasher\NormalizingSha1Hasher;
+use MAPIS\CodeMonitor\NodeTransformer\NormalizingSha1Hasher;
 use MAPIS\CodeMonitor\Finding;
 use MAPIS\CodeMonitor\FunctionCollectingVisitor;
 use MAPIS\CodeMonitor\PrettyPrinter;

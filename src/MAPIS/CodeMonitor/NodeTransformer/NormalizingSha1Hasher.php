@@ -1,12 +1,12 @@
 <?php
 
-namespace MAPIS\CodeMonitor\CodeHasher;
+namespace MAPIS\CodeMonitor\NodeTransformer;
 
-use MAPIS\CodeMonitor\ICodeHasher;
+use MAPIS\CodeMonitor\INodeTransformer;
 use PhpParser\Node;
 
 class NormalizingSha1Hasher
-	implements ICodeHasher
+	implements INodeTransformer
 {
 	/**
 	 * @var \MAPIS\CodeMonitor\PrettyPrinter
