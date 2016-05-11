@@ -33,6 +33,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 			function($element) { return $element[0] != '@'; }
 		);
 		
+		// Collect all the doctags
 		$this->doctags = array_filter(
 			$watchedFunctions, 
 			function($element) { return $element[0] == '@'; }
@@ -49,28 +50,59 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 				/**
 				 * @var $node Class_
 				 */
-				$this->parseClass($node);
+				
+				if ($this->interestedIn($node))
+				{
+					$this->addStatementOfInterest($node, (string) $node->namespacedName);
+				}
+				// Did we (also) want to watch a specific method?
+				foreach ($node->stmts as $stmt)
+				{
+					if ($stmt instanceof Node\Stmt\ClassMethod && $this->interestedIn($stmt, $node))
+					{
+						$namespacedMethodName = $node->namespacedName . '::' . $stmt->name;
+						$this->addStatementOfInterest($stmt, $namespacedMethodName);
+					}
+				}
+
 				break;
 
 			case Node\Stmt\Function_::class:
 				/**
 				 * @var $node Function_
 				 */
-				$this->parseFunction($node);
+				
+				if ($this->interestedIn($node))
+				{
+					$this->addStatementOfInterest($node, $node->namespacedName);
+				}
+				
 				break;
 		}
 	}
 
-	protected function interestedIn(Node $node)
+	protected function interestedIn(Node $node, $class = NULL)
 	{
-		if (
-			in_array($node->name, $this->methods) ||
-			in_array($node->namespacedName, $this->methods))
+		$defaultName         = $node->name;
+		$fullyQualifiedName  = $node->namespacedName ? $node->namespacedName : $node->name;
+
+		if (!is_null($class) && !$class instanceof Node\Stmt\Class_)
+			throw new InvalidArgumentException("Supplied \$class must be of type Class_");
+		
+		if (!is_null($class))
+		{
+			$defaultName        = $class->name . '::' . $defaultName;
+			$fullyQualifiedName = $class->namespacedName . '::' . $fullyQualifiedName;
+		} 
+		
+		if (in_array($defaultName, $this->methods) ||
+			in_array($fullyQualifiedName, $this->methods) || 
+			$this->interestedInDocblock($node))
 		{
 			return TRUE;
 		}
 		
-		return $this->interestedInDocblock($node);
+		return FALSE;
 	}
 	
 	protected function interestedInDocblock(Node $node)
@@ -84,9 +116,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 				foreach ($this->doctags as $tag)
 				{
 					if (stripos($comment, $tag) !== FALSE)
-					{
 						return TRUE;
-					}
 				}
 			}
 		}
@@ -94,58 +124,15 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 		return FALSE;
 	}
 	
-
-	protected function parseFunction(Function_ $node)
+	protected function addStatementOfInterest(Node $node, $registerName)
 	{
-		if ($this->interestedIn($node))
-		{
-			$codeSig = new StatementSignature();
-			$codeSig->setFqmn($node->namespacedName);
-			$codeSig->setFile($this->file);
-			$codeSig->setHash($this->codeHasher->hashFromFunction($node));
-			$codeSig->setCode($this->codeHasher->codeFromFunction($node));
-
-			$this->foundMethods[$node->name] = $codeSig;
-		}
-	}
-
-	protected function parseClass(Node\Stmt\Class_ $node)
-	{
-		// Did we want to watch this entire class?
-		if ($this->interestedIn($node))
-		{
-			$codeSig = new StatementSignature();
-			$codeSig->setFqmn($node->namespacedName);
-			$codeSig->setFile($this->file);
-			$codeSig->setHash($this->codeHasher->hashFromClass($node));
-			$codeSig->setCode($this->codeHasher->codeFromClass($node));
-
-			$this->foundMethods[(string)$node->namespacedName] = $codeSig;
-		}
-		// Did we (also) want to watch a specific method?
-		foreach ($node->stmts as $stmt)
-		{
-			if ($stmt instanceof Node\Stmt\ClassMethod)
-			{
-
-				$namespacedMethodName = $node->namespacedName . '::' . $stmt->name;
-				$methodName = $node->name . '::' . $stmt->name;
-
-				if (
-					in_array($methodName, $this->methods) || 
-					in_array($namespacedMethodName, $this->methods) || 
-					$this->interestedInDocblock($stmt))
-				{
-					$codeSig = new StatementSignature();
-					$codeSig->setFqmn($namespacedMethodName);
-					$codeSig->setFile($this->file);
-					$codeSig->setHash($this->codeHasher->hashFromMethod($stmt));
-					$codeSig->setCode($this->codeHasher->codeFromMethod($stmt));
-
-					$this->foundMethods[$namespacedMethodName] = $codeSig;
-				}
-			}
-		}
+		$codeSig = new StatementSignature();
+		$codeSig->setFqmn($registerName);
+		$codeSig->setFile($this->file);
+		$codeSig->setHash($this->codeHasher->toHash($node));
+		$codeSig->setCode($this->codeHasher->toCode($node));
+	
+		$this->foundMethods[$registerName] = $codeSig;
 	}
 
 	public function getFoundMethods()

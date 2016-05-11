@@ -3,7 +3,7 @@
 namespace MAPIS\CodeMonitor\CodeHasher;
 
 use MAPIS\CodeMonitor\ICodeHasher;
-use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node;
 
 class NormalizingSha1Hasher
 	implements ICodeHasher
@@ -18,42 +18,32 @@ class NormalizingSha1Hasher
 		$this->normalizer = $normalizer;
 	}
 
-	protected function hash($string)
+	public function toHash(Node $node)
 	{
-		return sha1($string);
+		$code = $this->toCode($node);
+		return sha1($code);
 	}
-
-	public function hashFromClass(Class_ $class)
+	
+	public function toCode(Node $node)
 	{
-		$code = $this->normalizer->pStmt_Class($class);
-		return $this->hash($code);
+		switch (get_class($node))
+		{
+			case Node\Stmt\Class_::class:
+				$code = $this->normalizer->pStmt_Class($node);
+				break;
+			
+			case Node\Stmt\Function_::class:
+				$code = $this->normalizer->pStmt_Function($node);
+				break;
+				
+			case Node\Stmt\ClassMethod::class:
+				$code = $this->normalizer->pStmt_ClassMethod($node);
+				break;
+		
+			default:
+				throw new \InvalidArgumentException("Don't know how to obtain code for instance of: " . get_class($class));
+		}
+		
+		return $code;
 	}
-
-	public function hashFromMethod (\PhpParser\Node\Stmt\ClassMethod $method)
-	{
-		$code = $this->normalizer->pStmt_ClassMethod($method);
-		return $this->hash($code);
-	}
-
-	public function hashFromFunction (\PhpParser\Node\Stmt\Function_ $function)
-	{
-		$code = $this->normalizer->pStmt_Function($function);
-		return $this->hash($code);
-	}
-
-	public function codeFromClass(Class_ $class)
-	{
-		return $this->normalizer->pStmt_Class($class);
-	}
-
-	public function codeFromMethod (\PhpParser\Node\Stmt\ClassMethod $method)
-	{
-		return $this->normalizer->pStmt_ClassMethod($method);
-	}
-
-	public function codeFromFunction (\PhpParser\Node\Stmt\Function_ $function)
-	{
-		return $this->normalizer->pStmt_Function($function);
-	}
-
 }

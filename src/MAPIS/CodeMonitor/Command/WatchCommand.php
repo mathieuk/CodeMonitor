@@ -43,15 +43,20 @@ class WatchCommand extends AbstractCommand
 				InputArgument::REQUIRED,
 				'What statement/identifier do you want to monitor?'
 			)
-			->addOption('ignore-existing', 'i', InputOption::VALUE_NONE, 'Dont ask about existing watches');
+			->addOption(
+				'ignore-existing', 
+				'i', 
+				InputOption::VALUE_NONE, 
+				'Dont ask about existing watches'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$this->questionHelper = $this->getHelper('question');
 
-		$identifier = $input->getArgument('identifier');
-		$wantExistingQuestions = !$input->getOption('ignore-existing');
+		$identifier            = $input->getArgument('identifier');
+		$ignoreExistingWatches = $input->getOption('ignore-existing');
 
 		$config     = $this->getConfiguration($input);
 		$codeMon    = $this->getCodeMonitor($config);
@@ -74,11 +79,13 @@ class WatchCommand extends AbstractCommand
 		{
 			$existingWatch =  $repo->findOneByFqmn($result->getFqmn());
 
-			if ( !is_null($existingWatch))
+			if (!is_null($existingWatch))
 			{
-				if ($wantExistingQuestions)
+				if ($ignoreExistingWatches !== TRUE)
 				{
-					$question = new ConfirmationQuestion("Identifier $identifier (as {$result->getFqmn()} in {$result->getFile()}) already being watched. Keep watching? [Y/n]:");
+					$question = new ConfirmationQuestion (
+						"$identifier (resolved as {$result->getFqmn()} in {$result->getFile()}) already being watched. Keep watching? [Y/n]:"
+					);
 				
 					if (!$this->questionHelper->ask($input, $output, $question))
 					{
@@ -90,7 +97,10 @@ class WatchCommand extends AbstractCommand
 			}
 			else
 			{
-				$question = new ConfirmationQuestion("Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Start watching? [Y/n]:");
+				$question = new ConfirmationQuestion(
+					"Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Start watching? [Y/n]:"
+				);
+				
 				if ($this->questionHelper->ask($input, $output, $question))
 				{
 					$repo->store($result);
