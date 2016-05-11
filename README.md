@@ -2,6 +2,12 @@
 
 CodeMonitor allows you to monitor and alert on changes to specific functions, methods and/or entire classes. 
 
+## Features
+
+* Easily create watchlists of functions, methods or entire classes
+* Namespace support
+* Only get notifications of meaningful changes (not for whitespace or comment changes)
+
 ## Example usage
 * Make sure your entire team is aware of changes to that sensitive method
 * Keep track of changes to specific methods in that composer package you use
