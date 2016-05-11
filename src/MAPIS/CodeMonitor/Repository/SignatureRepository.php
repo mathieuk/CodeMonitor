@@ -50,5 +50,27 @@ class SignatureRepository
 		
 		return $methods;
 	}
+	
+	public function delete(StatementSignature $statement)
+	{
+		$stmt = $this->db->prepare("DELETE FROM statement_signature WHERE fqmn = :fqmn");
+		$stmt->bindParam(':fqmn', $statement->getFqmn());
+		$stmt->execute();
+	}
+	
+	public function findOneByFqmn($fqmn)
+	{
+		$stmt = $this->db->prepare("SELECT * FROM statement_signature WHERE fqmn = :fqmn");
+		$stmt->bindParam(':fqmn', $fqmn);
+		$result = $stmt->execute();
+
+		$rows = $stmt->fetchAll();
+		if ($result && count($rows))
+		{
+			return $this->statementSignatureFromDbRecord($rows[0]);
+		}
+		
+		return NULL;
+	}
 
 }

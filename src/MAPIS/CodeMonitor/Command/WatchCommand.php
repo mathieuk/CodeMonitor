@@ -70,12 +70,27 @@ class WatchCommand extends AbstractCommand
 		 */
 		foreach ($results as $result)
 		{
-			$question      = new ConfirmationQuestion("Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Watch this? [Y/n]: ");
-
-			if ($this->questionHelper->ask($input, $output, $question))
+			$existingWatch = $repo->findOneByFqmn($result->getFqmn());
+			
+			if (!is_null($existingWatch))
 			{
-				$repo->store($result);
-				$output->writeln("[ADDED] $identifier");
+				$question = new ConfirmationQuestion("Identifier $identifier (as {$result->getFqmn()} in {$result->getFile()}) already being watched. Keep watching? [Y/n]:");
+				
+				if (!$this->questionHelper->ask($input, $output, $question))
+				{
+					$repo->delete($existingWatch);
+					$output->writeln("[REMOVED] {$result->getFqmn()}");
+					continue;
+				}
+			}
+			else 
+			{
+				$question = new ConfirmationQuestion("Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Start watching? [Y/n]:");
+				if ($this->questionHelper->ask($input, $output, $question))
+				{
+					$repo->store($result);
+					$output->writeln("[ADDED] {$result->getFqmn()}");
+				}
 			}
 		}
 	}
