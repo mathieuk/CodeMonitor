@@ -15,7 +15,7 @@ CodeMonitor allows you to monitor and alert on changes to specific functions, me
 
 ## Example
 
-```
+```bash
 $ php codemon.php init 
 Enter source base path [/Users/mathieu/Projects/CodeMonitor]: 
 Enter directory to store my data in [/Users/mathieu/Projects/CodeMonitor/.codemon/]: 
@@ -25,6 +25,10 @@ Wrote configuration to /Users/mathieu/Projects/CodeMonitor/.codemon/config.json
 $ php codemon.php watch -c ./.codemon/config.json Controller_Test
 Found Controller_Test in /Users/mathieu/Projects/CodeMonitor/tests/src/controller/index.php. Watch this? [Y/n]: Y
 [ADDED] Controller_Test
+
+$ php codemon.php watch -c ./.codemon/config.json @sensitive
+Found @sensitive as MAPIS\Tests\MyTest::MyMethod in /Users/mathieu/Projects/CodeMonitor/tests/namespaced.php. Start watching? [Y/n]:
+[ADDED] MAPIS\Tests\MyTest::MyMethod
 
 $ php codemon.php check -c ./.codemon/config.json
 [CHANGED] /Users/mathieu/Projects/CodeMonitor/tests/src/controller/index.php: Controller_Test
