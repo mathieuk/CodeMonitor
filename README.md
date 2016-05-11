@@ -4,8 +4,8 @@ CodeMonitor allows you to monitor and alert on changes to specific functions, me
 
 ## Features
 
-* Easily create watchlists of functions, methods or entire classes
-* Namespace support
+* Easily create watchlists of functions, methods or entire classes (with namespace support)
+* Create watch lists based on docblocks (watch class or function with specific docblock tag)
 * Only get notifications of meaningful changes (not for whitespace or comment changes)
 
 ## Example usage
