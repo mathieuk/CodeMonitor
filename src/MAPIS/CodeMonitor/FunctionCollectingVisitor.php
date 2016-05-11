@@ -11,8 +11,6 @@ use PhpParser\PrettyPrinter\Standard;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Function_;
 
-
-
 class FunctionCollectingVisitor extends NodeVisitorAbstract
 {
 	protected $file;
@@ -51,7 +49,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 		}
 	}
 
-	protected function parsefunction(Function_ $node)
+	protected function parseFunction(Function_ $node)
 	{
 		if (in_array($node->name, $this->methods))
 		{
@@ -59,7 +57,7 @@ class FunctionCollectingVisitor extends NodeVisitorAbstract
 			$codeSig->setFqmn($node->name);
 			$codeSig->setFile($this->file);
 			$codeSig->setHash($this->codeHasher->hashFromFunction($node));
-			$codeSig->setCode($this->codeHasher->codeFromFunction($code));
+			$codeSig->setCode($this->codeHasher->codeFromFunction($node));
 
 			$this->foundMethods[$node->name] = $codeSig;
 		}
