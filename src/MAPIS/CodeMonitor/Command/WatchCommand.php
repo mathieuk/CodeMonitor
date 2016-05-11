@@ -42,7 +42,8 @@ class WatchCommand extends AbstractCommand
 				'identifier',
 				InputArgument::REQUIRED,
 				'What statement/identifier do you want to monitor?'
-			);
+			)
+			->addOption('ignore-existing', 'i', InputOption::VALUE_NONE, 'Dont ask about existing watches');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
@@ -50,6 +51,8 @@ class WatchCommand extends AbstractCommand
 		$this->questionHelper = $this->getHelper('question');
 
 		$identifier = $input->getArgument('identifier');
+		$wantExistingQuestions = !$input->getOption('ignore-existing');
+
 		$config     = $this->getConfiguration($input);
 		$codeMon    = $this->getCodeMonitor($config);
 		$repo       = $this->getRepository($config);
@@ -69,20 +72,23 @@ class WatchCommand extends AbstractCommand
 		 */
 		foreach ($results as $result)
 		{
-			$existingWatch = $repo->findOneByFqmn($result->getFqmn());
-			
-			if (!is_null($existingWatch))
+			$existingWatch =  $repo->findOneByFqmn($result->getFqmn());
+
+			if ( !is_null($existingWatch))
 			{
-				$question = new ConfirmationQuestion("Identifier $identifier (as {$result->getFqmn()} in {$result->getFile()}) already being watched. Keep watching? [Y/n]:");
-				
-				if (!$this->questionHelper->ask($input, $output, $question))
+				if ($wantExistingQuestions)
 				{
-					$repo->delete($existingWatch);
-					$output->writeln("[REMOVED] {$result->getFqmn()}");
-					continue;
+					$question = new ConfirmationQuestion("Identifier $identifier (as {$result->getFqmn()} in {$result->getFile()}) already being watched. Keep watching? [Y/n]:");
+				
+					if (!$this->questionHelper->ask($input, $output, $question))
+					{
+						$repo->delete($existingWatch);
+						$output->writeln("[REMOVED] {$result->getFqmn()}");
+						continue;
+					}
 				}
 			}
-			else 
+			else
 			{
 				$question = new ConfirmationQuestion("Found $identifier as {$result->getFqmn()} in {$result->getFile()}. Start watching? [Y/n]:");
 				if ($this->questionHelper->ask($input, $output, $question))
